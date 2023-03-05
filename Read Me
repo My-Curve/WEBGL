@@ -1,0 +1,66 @@
+How to run this file:
+unlike the other demos, and due to security issue related to running images on a website, this demo runs from a webserver. you heard it right..it runs from a webserver
+Requirements:
+1. webserver, Xampp, lamp or wamp will work. they are all apache based
+NB://You can use Pyhton based webserver but I am not sure whether majority of you are familiar with it.
+2. Copy the folder called Textured_Cube to the webfiles folder. usually htdocs for xampp
+3. Start your webser and ensure apache is running. (in this case it is th eonly service needed)
+4. Run your browser (the one had already confirmed it support WebGL)
+5. test the webseerer by running localhost in the address bar (http://localhost/).
+6. If oyur test in 5 above displays a meesage about your server (a welcome message) your webser is running and ready to render the services
+7. Ru your index.htmll file by typing http://localhost/Textured_Cube/index.html on the address bar
+8. The textured cube wil be displayed and withe the texture of two hummingbirds (cubetexture_1.png). 
+9. you can open the textured_cube folder in your webser and change the value cubetexture_1.png to cubetexture.png and observe the changes by refreshing th eindex.html page
+10. Read through the code and observe that the main code that does all this is the one shown below:
+11. If oyu want to add more images, ensure they are power of two images.
+const texture = loadTexture(gl, "http://localhost:/Textured_Cube/cubetexture_1.png");
+function loadTexture(gl, url) {
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Because images have to be download over the internet
+  // they might take a moment until they are ready.
+  // Until then put a single pixel in the texture so we can
+  // use it immediately. When the image has finished downloading
+  // we'll update the texture with the contents of the image.
+  const level = 0;
+  const internalFormat = gl.RGBA;
+  const width = 1;
+  const height = 1;
+  const border = 0;
+  const srcFormat = gl.RGBA;
+  const srcType = gl.UNSIGNED_BYTE;
+  const pixel = new Uint8Array([0, 255, 0, 255]);  // opaque blue
+  gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                width, height, border, srcFormat, srcType,
+                pixel);
+
+  const image = new Image();
+  image.onload = function() {
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+                  srcFormat, srcType, image);
+
+    // WebGL1 has different requirements for power of 2 images
+    // vs non power of 2 images so check if the image is a
+    // power of 2 in both dimensions.
+    if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+       // Yes, it's a power of 2. Generate mips.
+       gl.generateMipmap(gl.TEXTURE_2D);
+    } else {
+       // No, it's not a power of 2. Turn of mips and set
+       // wrapping to clamp to edge
+       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
+  };
+  image.src = url;
+
+  return texture;
+}
+
+function isPowerOf2(value) {
+  return (value & (value - 1)) == 0;
+}
+
